@@ -11,6 +11,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // $this->call(UsersTableSeeder::class);
+        Eloquent::unguard();
+
+        $this->command->info('Seeding data from Schema.sql file!');
+        $path = __DIR__ . '/../schema.sql';
+        DB::unprepared(file_get_contents($path));
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Projects;
 
 class Clients extends Model
 {
@@ -22,4 +23,12 @@ class Clients extends Model
      */
     protected $hidden = [
     ];
+
+    /**
+     * Get the projects for the clients.
+     */
+    public function breakdown()
+    {
+        return $this->hasMany(Projects::class, 'Client_ID');
+    }
 }

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Projects;
+use App\Models\CostTypes;
 
 class Costs extends Model
 {

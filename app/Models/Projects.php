@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Costs;
+use App\Models\CostTypes;
 
 class Projects extends Model
 {
@@ -22,4 +24,27 @@ class Projects extends Model
      */
     protected $hidden = [
     ];
+
+    /**
+     * Get the projects for the clients.
+     */
+    public function projectCosts()
+    {
+        return $this->hasMany(Costs::class, 'Project_ID');
+    }
+
+    public function sumCosts()
+    {
+      return $this->projectCosts()
+        ->selectRaw('Project_ID, sum(amount) as amount')
+        ->groupBy('Project_ID');
+    }
+
+    /**
+     * Get the projects for the clients.
+     */
+    public function costs()
+    {
+        return $this->belongsToMany(CostTypes::class, 'costs', 'Project_ID', 'Cost_Type_ID');
+    }
 }
