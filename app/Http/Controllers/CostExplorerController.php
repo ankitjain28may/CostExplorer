@@ -25,24 +25,27 @@ class CostExplorerController extends Controller
             'breakdown' => function ($project) {
                 $project->with([
                     'costs' => function ($costtypes) {
-                        $costtypes->with([
+                        $costtypes->join('projects as p', 'p.id', '=', 'costs.Project_ID')
+                        ->with([
                             'costs' => function ($cost) {
-                                $cost->where('Parent_Cost_Type_ID', '!=', NULL);
+                                $cost->with('sumCosts')
+                                ->where('Parent_Cost_Type_ID', '!=', NULL);
                             },
+                            'sumCosts',
                         ])
                         ->where('Parent_Cost_Type_ID', NULL);
                     },
                     'sumCosts',
                 ]);
             },
-            'breakdown.costs.costs.costs',
         ])->find(1);
 
-        // dd(json_encode(CostTypes::with(['costs' => function ($cost) {
-        //     $cost->with(['projectCosts' => function ($query) {
-        //         $query->where('Cost_Type_ID', 4);
-        //     }]);
-        // }])->find(1), true));
+
+        // dd($users);
+
+        // $users = CostTypes::with(['costs' => function ($cost) {
+        //     $cost->with(['projectCosts']);
+        // }])->find(1);
 
 
 
