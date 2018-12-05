@@ -23,16 +23,20 @@ A web application which shows cost explorer to view different types of costs for
 
 ### Usage :
 
-Endpoint: /cost-explorer
+* Endpoint: /cost-explorer
+
 Output: Cost data of all clients and their projects
 
-Endpoint: /cost-explorer?clients[]=1&clients[]=2
+* Endpoint: /cost-explorer?clients[]=1&clients[]=2
+
 Output: Cost data of clients 1 and 2, and their projects
 
-Endpoint: /cost-explorer?clients[]=1&clients[]=2&projects[]=1
+* Endpoint: /cost-explorer?clients[]=1&clients[]=2&projects[]=1
+
 Output: Cost data of project 1 for clients 1 and 2
 
-Endpoint: /cost-explorer?cost_types[]=1&cost_types[]=2&cost_types[]=3
+* Endpoint: /cost-explorer?cost_types[]=1&cost_types[]=2&cost_types[]=3
+
 Output: Cost data with cost types 1, 2, and 3, for all clients (and their projects)
 
 
