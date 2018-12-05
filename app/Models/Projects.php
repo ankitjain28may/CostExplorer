@@ -67,11 +67,32 @@ class Projects extends Model
 
         foreach ($data as $index => $project) {
 
+            $cost_types_ids = [];
             $results[$index] = $project;
             $results[$index]->amount = Costs::costs($project->id)[0]->amount;
 
             $cost_types = Costs::costTypes($project->id, NULL, $cost_types_id);
-            $costs = Self::childCostTypes($cost_types, $project, $cost_types_id);
+            [$costs, $tempp] = Self::childCostTypes($cost_types, $project, $cost_types_id);
+            $cost_types_ids = array_merge($cost_types_ids, $tempp);
+
+            $cost_types_ids = array_diff($cost_types_id, $cost_types_ids);
+            asort($cost_types_ids);
+
+
+            if (count($cost_types_ids)) {
+                $stopRepeat = [];
+                foreach ($cost_types_ids as $key => $value) {
+                    if (in_array($value, $stopRepeat)) {
+                        continue;
+                    }
+                    $cost_types = Costs::costTypesNot($project->id, [$value]);
+                    [$costs_temp, $tempp] = Self::childCostTypes($cost_types, $project, $cost_types_id);
+                    $costs = array_merge($costs, $costs_temp);
+                    $stopRepeat = array_merge($stopRepeat, $tempp);
+
+                }
+
+            }
             $results[$index]->costs = $costs;
 
             if (count($cost_types_id)) {
@@ -80,18 +101,19 @@ class Projects extends Model
                     $results[$index]->amount = $temp;
                 }
             }
-
         }
-
         return $results;
     }
 
     public static function childCostTypes($cost_types, $project, $cost_types_id) {
+        $cost_types_ids = [];
         $costs = [];
         if (count($cost_types)) {
             foreach ($cost_types as $index => $cost_type) {
                 $costs[$index] = $cost_type;
-                $costs[$index]->costs = Self::childCostTypes(Costs::costTypes($project->id, $cost_type->id, $cost_types_id), $project, $cost_types_id);
+                $cost_types_ids[] = $cost_type->id;
+                [$costs[$index]->costs, $tempp] = Self::childCostTypes(Costs::costTypes($project->id, $cost_type->id), $project, $cost_types_id);
+                $cost_types_ids = array_merge($cost_types_ids, $tempp);
 
                 if (count($cost_types_id)) {
                     $temp = Self::calculateAmount($costs[$index]->costs);
@@ -101,7 +123,7 @@ class Projects extends Model
                 }
             }
         }
-        return $costs;
+        return [$costs, $cost_types_ids];
     }
 
     public static function calculateAmount($costs)

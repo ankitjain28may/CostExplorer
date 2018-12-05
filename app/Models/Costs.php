@@ -58,4 +58,16 @@ class Costs extends Model
         $data = $query->get();
         return $data;
     }
+
+    public static function costTypesNot($project_id, $cost_types_ids)
+    {
+        $query = DB::table('costs')
+            ->join('cost_types as ct', 'costs.Cost_Type_ID', '=', 'ct.id')
+            ->where('Project_ID', $project_id)
+            ->select('ct.id as id', 'ct.Name as name', 'amount')
+            ->whereIn('ct.id', $cost_types_ids);
+
+        $data = $query->get();
+        return $data;
+    }
 }
