@@ -50,50 +50,52 @@ class Projects extends Model
     }
 
 
-    public static function projects($client_id, $qprojects = [])
+    public static function projects($client_id, $projects_id = [], $cost_types_id = [])
     {
         $query = DB::table('projects')
             ->join('clients as c', 'projects.Client_ID', '=', 'c.id')
-            // ->groupBy('Client_ID')
             ->select('projects.id as id', 'projects.Title as title')
             ->where('Client_ID', $client_id);
 
-        if (count($qprojects)) {
-            $query->whereIn('projects.id', $qprojects);
-        }
-            $data = $query->get();
-        $projects = [];
-        foreach ($data as $key => $value) {
-            $projects[$key] = $value;
-            $projects[$key]->amount = Costs::costs($value->id)[0]->amount;
-            $costtypes = Costs::costTypes($value->id);
-            $costs = Self::recurloop($costtypes, $value);
-            $projects[$key]->costs = $costs;
+        if (count($projects_id)) {
+            $query->whereIn('projects.id', $projects_id);
         }
 
-        return $projects;
+        $data = $query->get();
+
+        $results = [];
+
+        foreach ($data as $index => $project) {
+
+            $results[$index] = $project;
+            $results[$index]->amount = Costs::costs($project->id)[0]->amount;
+
+            $cost_types = Costs::costTypes($project->id, NULL, $cost_types_id);
+            $costs = Self::childCostTypes($cost_types, $project, $cost_types_id);
+            $results[$index]->costs = $costs;
+        }
+
+        return $results;
     }
 
-    public static function recurloop($costtypes, $value) {
+    public static function childCostTypes($cost_types, $project, $cost_types_id) {
         $costs = [];
-        if (count($costtypes)) {
-            foreach ($costtypes as $key1 => $value1) {
-                $costs[$key1] = $value1;
-                $costs[$key1]->costs = Self::recurloop(Self::recur($value1->id, $value->id), $value);
+        if (count($cost_types)) {
+            foreach ($cost_types as $index => $cost_type) {
+                $costs[$index] = $cost_type;
+                $costs[$index]->costs = Self::childCostTypes(Costs::costTypes($project->id, $cost_type->id, $cost_types_id), $project, $cost_types_id);
+                // $costs[$index]->amount += Self::calculateAmount($costs[$index]->costs);
             }
         }
         return $costs;
-
-
     }
 
-    public static function recur($costtype_id, $project_id) {
-        $data = DB::table('costs')
-            ->join('cost_types as ct', 'costs.Cost_Type_ID', '=', 'ct.id')
-            ->where('Project_ID', $project_id)
-            ->where('ct.Parent_Cost_Type_ID', $costtype_id)
-            ->select('ct.id as id', 'ct.Name as name', 'amount')
-            ->get();
-        return $data;
-    }
+    // public static function calculateAmount($costs)
+    // {
+    //     $amount = 0;
+    //     foreach ($costs as $index => $cost) {
+    //         $amount += $cost->amount;
+    //     }
+    //     return $amount;
+    // }
 }

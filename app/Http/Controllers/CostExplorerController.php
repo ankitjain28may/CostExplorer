@@ -13,87 +13,66 @@ class CostExplorerController extends Controller
 {
 
     /**
-     * [index description]
-     * @return [type] [description]
+     * Handle the incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function __invoke(Request $request)
     {
 
+        // Get query params
         $input = $request->all();
         $qclients = [];
         $qprojects = [];
+        $qcost_types = [];
         if (isset($input['clients'])) {
             $qclients = $input['clients'];
         }
         if (isset($input['projects'])) {
             $qprojects = $input['projects'];
         }
-
-          // dd(Clients::find(1)->projects);
-
-        // $users = Clients::with([
-        //     'breakdown' => function ($project) {
-        //         $project->with([
-        //             'costs' => function ($costtypes) {
-        //                 $costtypes->join('projects as p', 'p.id', '=', 'costs.Project_ID')
-        //                 ->with([
-        //                     'costs' => function ($cost) {
-        //                         $cost->with('sumCosts')
-        //                         ->where('Parent_Cost_Type_ID', '!=', NULL);
-        //                     },
-        //                     'sumCosts',
-        //                 ])
-        //                 ->where('Parent_Cost_Type_ID', NULL);
-        //             },
-        //             'sumCosts',
-        //         ]);
-        //     },
-        // ])->find(1);
-
-
-        // dd($users);
-
-        // $users = CostTypes::with(['costs' => function ($cost) {
-        //     $cost->with(['projectCosts']);
-        // }])->find(1);
-        //
-        // ********************************************
-
-        $query = DB::table('clients')
-                    ->select('id', 'Name as name');
-        if (count($qclients)) {
-            $query->whereIn('id', $qclients);
+        if (isset($input['cost_types'])) {
+            $qcost_types = $input['cost_types'];
         }
-        $clients = $query->get();
+
+        // Get the clients
+        $clients = Clients::getClients($qclients);
         $data = [];
-
-        foreach ($clients as $key => $client) {
-            $data[$key] = $client;
-            $data[$key]->amount = 0;
-
-            $projects = Projects::projects($client->id, $qprojects);
-            foreach ($projects as $key1 => $value1) {
-                $data[$key]->amount += $value1->amount;
+        foreach ($clients as $index => $client) {
+            $data[$index] = $client;
+            $data[$index]->amount = 0;
+            // Get data of each projects
+            $projects = Projects::projects($client->id, $qprojects, $qcost_types);
+            foreach ($projects as $key => $project) {
+                $data[$index]->amount += $project->amount;
             }
-            $data[$key]->breakdown = $projects;
+            $data[$index]->breakdown = $projects;
         }
 
+        return response()->json($data, 200);
 
 
-
-
-        // *********************************************
-
-
-        die(json_encode($data, true));
-        // foreach (Clients::find(1)->projects as $projects) {
-        //     foreach ($projects->costTypes as $costtypes) {
-        //         $pro[] = $costtypes->costTypes;
-        //     }
-        //     // $pro[] = $projects->costTypes;
-        // }
-        // die(json_encode($pro, true));
-        // dd(Projects::find(1)->projectCosts);
-        // dd(CostTypes::find(1)->costTypes);
+        /* Eager Loading--------------------------------------------------------
+        $users = Clients::with([
+            'breakdown' => function ($project) {
+                $project->with([
+                    'costs' => function ($costtypes) {
+                        $costtypes->join('projects as p', 'p.id', '=', 'costs.Project_ID')
+                        ->with([
+                            'costs' => function ($cost) {
+                                $cost->with('sumCosts')
+                                ->where('Parent_Cost_Type_ID', '!=', NULL);
+                            },
+                            'sumCosts',
+                        ])
+                        ->where('Parent_Cost_Type_ID', NULL);
+                    },
+                    'sumCosts',
+                ]);
+            },
+        ])->find(1);
+        End Eager Loading-------------------------------------------------------
+         */
     }
 }

@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Projects;
-use App\Models\CostTypes;
 use DB;
 
 class Costs extends Model
@@ -26,26 +24,38 @@ class Costs extends Model
     protected $hidden = [
     ];
 
-    public static function costs($project_id)
+    // Calculate the cost of the project
+    public static function costs($project_id, $cost_types_id = [])
     {
-        $data = DB::table('costs')
+        $query = DB::table('costs')
             ->join('cost_types as ct', 'costs.Cost_Type_ID', '=', 'ct.id')
             ->groupBy('Project_ID')
             ->select(DB::raw('sum(Amount) as amount'))
             ->where('Project_ID', $project_id)
-            ->get();
+            ->where('ct.Parent_Cost_Type_ID', NULL);
+
+        if (count($cost_types_id)) {
+            $query->whereIn('ct.id', $cost_types_id);
+        }
+
+        $data = $query->get();
         return $data;
     }
 
-
-    public static function costTypes($project_id)
+    // Get the cost_type wrt to project_id and cost_type_id
+    public static function costTypes($project_id, $cost_type_id = NULL, $cost_types_id = [])
     {
-        $data = DB::table('costs')
+        $query = DB::table('costs')
             ->join('cost_types as ct', 'costs.Cost_Type_ID', '=', 'ct.id')
             ->where('Project_ID', $project_id)
-            ->where('ct.Parent_Cost_Type_ID', NULL)
-            ->select('ct.id as id', 'ct.Name as name', 'amount')
-            ->get();
+            ->where('ct.Parent_Cost_Type_ID', $cost_type_id)
+            ->select('ct.id as id', 'ct.Name as name', 'amount');
+
+        if (count($cost_types_id)) {
+            $query->whereIn('ct.id', $cost_types_id);
+        }
+
+        $data = $query->get();
         return $data;
     }
 }

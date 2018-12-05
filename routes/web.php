@@ -11,4 +11,4 @@
 |
 */
 
-Route::get('/cost-explorer', 'CostExplorerController@index');
+Route::get('/cost-explorer', 'CostExplorerController');
