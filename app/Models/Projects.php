@@ -73,6 +73,14 @@ class Projects extends Model
             $cost_types = Costs::costTypes($project->id, NULL, $cost_types_id);
             $costs = Self::childCostTypes($cost_types, $project, $cost_types_id);
             $results[$index]->costs = $costs;
+
+            if (count($cost_types_id)) {
+                $temp = Self::calculateAmount($results[$index]->costs);
+                if ($temp) {
+                    $results[$index]->amount = $temp;
+                }
+            }
+
         }
 
         return $results;
@@ -84,18 +92,24 @@ class Projects extends Model
             foreach ($cost_types as $index => $cost_type) {
                 $costs[$index] = $cost_type;
                 $costs[$index]->costs = Self::childCostTypes(Costs::costTypes($project->id, $cost_type->id, $cost_types_id), $project, $cost_types_id);
-                // $costs[$index]->amount += Self::calculateAmount($costs[$index]->costs);
+
+                if (count($cost_types_id)) {
+                    $temp = Self::calculateAmount($costs[$index]->costs);
+                    if ($temp) {
+                        $costs[$index]->amount = $temp;
+                    }
+                }
             }
         }
         return $costs;
     }
 
-    // public static function calculateAmount($costs)
-    // {
-    //     $amount = 0;
-    //     foreach ($costs as $index => $cost) {
-    //         $amount += $cost->amount;
-    //     }
-    //     return $amount;
-    // }
+    public static function calculateAmount($costs)
+    {
+        $amount = 0;
+        foreach ($costs as $index => $cost) {
+            $amount += $cost->amount;
+        }
+        return $amount;
+    }
 }

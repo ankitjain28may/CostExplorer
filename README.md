@@ -3,9 +3,6 @@
 web: vendor/bin/heroku-php-apache2 ./public
 A web application which shows cost explorer to view different types of costs for various projects that your company is working on for multiple clients.
 
-
->Note: The website is deployed to heroku [https://cost-explorer.herokuapp.com/](https://cost-explorer.herokuapp.com/)
-
 ## Installation and Contribution
 
 ### Requirements :
